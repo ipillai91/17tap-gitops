@@ -2,37 +2,59 @@
 tap_install:
   values:
     shared:
-      ingress_domain: "ipillai_gitops_build.tapscale.cloudfocused.in"
-
-    ceip_policy_disclosed: true
-
-    #The above keys are minimum numbers of entries needed in tap-values.yaml to get a functioning TAP Full profile installation.
-
-    # Below are the keys which may have default values set, but can be overridden.
-
-    profile: full # Can take iterate, build, run, view.
-
-    supply_chain: testing # Can take testing, testing_scanning.
-
-    ootb_supply_chain_testing: # Based on supply_chain set above, can be changed to ootb_supply_chain_testing, ootb_supply_chain_testing_scanning.
-      registry:
-        server: tapscale.azurecr.io/ipillaigitops/build
-        repository: workload
-
-    contour:
-      envoy:
-        service:
-          type: LoadBalancer # This is set by default, but can be overridden by setting a different value.
-
+      ingress_issuer: ""
+      ingress_domain: tap.ipillaifull.tapscale.cloudfocused.in
+    accelerator:
+        server:
+            service_type: ClusterIP
+        ingress:
+            include: true
     buildservice:
-      kp_default_repository: tapscale.azurecr.io/ipillaigitops/build/buildservice
-
-    ootb_templates:
-      iaas_auth: true
-
-    # metadata_store:
-    #   ns_for_export_app_cert: "MY-DEV-NAMESPACE" # Verify this namespace is available within your cluster before initiating the Tanzu Application Platform installation.
-    #   app_service_type: ClusterIP # Defaults to LoadBalancer. If shared.ingress_domain is set earlier, this must be set to ClusterIP.
-
-
-
+        kp_default_repository: tapscale.azurecr.io/ipillai/tkgi/buildservice
+        kp_default_repository_secret:
+            name: registry-credentials
+            namespace: my-apps
+    ceip_policy_disclosed: true
+    contour:
+        envoy:
+            service:
+                type: LoadBalancer
+    grype:
+        namespace: my-apps
+        targetImagePullSecret: registry-credentials
+    ootb_supply_chain_testing_scanning:
+        gitops:
+            ssh_secret: ""
+        registry:
+            repository: ipillai/tkgi/workload
+            server: tapscale.azurecr.io
+    profile: full
+    supply_chain: testing_scanning
+    metadata_store:
+        ns_for_export_app_cert: "*"
+        ingress_issuer: "tap-ingress-selfsigned"
+    tap_telemetry:
+        customer_entitlement_account_number: "123456789"
+        installed_for_vmware_internal_use: "true"
+        opt_out_of_telemetry: "false"
+    namespace_provisioner:
+      controller: true
+      additional_sources:
+      # Add templated Grype scan policy and java Tekton pipeline
+      - git:
+          ref: origin/main
+          subPath: namespace-provisioner-gitops-examples/custom-resources/testing-scanning-supplychain
+          url: https://github.com/dapdelivery/application-accelerator-samples.git
+        path: _ytt_lib/testingscanning
+      # Add templated snyk scan policy
+      - git:
+          ref: origin/main
+          subPath: namespace-provisioner-gitops-examples/custom-resources/scanpolicies
+          url: https://github.com/dapdelivery/application-accelerator-samples.git
+        path: _ytt_lib/scanpolicies
+    tap_gui:
+      app_config:
+        auth:
+          allowGuestAccess: true
+    crossplane:
+      orphan_resources: false
