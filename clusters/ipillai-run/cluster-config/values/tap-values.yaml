@@ -3,14 +3,14 @@ tap_install:
   values:
     shared:
       ingress_issuer: ""
-      ingress_domain: tap.ipillaifull.tapscale.cloudfocused.in
+      ingress_domain: tap.ipillaifullsample.tapscale.cloudfocused.in
     accelerator:
         server:
             service_type: ClusterIP
         ingress:
             include: true
     buildservice:
-        kp_default_repository: tapscale.azurecr.io/ipillai/tkgi/buildservice
+        kp_default_repository: tapscale.azurecr.io/ipillai/sample/buildservice
         kp_default_repository_secret:
             name: registry-credentials
             namespace: my-apps
@@ -26,7 +26,7 @@ tap_install:
         gitops:
             ssh_secret: ""
         registry:
-            repository: ipillai/tkgi/workload
+            repository: ipillai/sample/workload
             server: tapscale.azurecr.io
     profile: full
     supply_chain: testing_scanning
